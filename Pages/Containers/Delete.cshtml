@@ -1,0 +1,33 @@
+@page
+@model DEPOTCONTAINER.Pages.Containers.DeleteModel
+@{
+    ViewData["Title"] = "Xóa Container";
+}
+
+<h2 class="mt-4 text-danger"><i class="bi bi-trash"></i> Xóa Container</h2>
+
+@if (Model.Container == null)
+{
+    <div class="alert alert-warning">Không tìm thấy container.</div>
+}
+else
+{
+    <div class="card border-danger shadow-sm mt-3">
+        <div class="card-body">
+            <h5>Bạn có chắc muốn xóa container này?</h5>
+            <dl class="row">
+                <dt class="col-sm-3">Số Container:</dt>
+                <dd class="col-sm-9"><code>@Model.Container.ContainerNumber</code></dd>
+                <dt class="col-sm-3">Loại:</dt>
+                <dd class="col-sm-9">@Model.Container.ContainerTypeName - @Model.Container.SizeInFeet ft</dd>
+                <dt class="col-sm-3">ISO:</dt>
+                <dd class="col-sm-9">@Model.Container.IsoCode</dd>
+            </dl>
+            <form method="post">
+                <input type="hidden" asp-for="Id" />
+                <a asp-page="Index" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Hủy</a>
+                <button type="submit" class="btn btn-danger"><i class="bi bi-trash"></i> Xóa vĩnh viễn</button>
+            </form>
+        </div>
+    </div>
+}

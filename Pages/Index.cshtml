@@ -1,0 +1,83 @@
+@page
+@model DEPOTCONTAINER.Pages.IndexModel
+@{
+    ViewData["Title"] = "Trang chủ";
+}
+
+<div class="container py-5">
+    <div class="text-center mb-5">
+        <h1 class="display-4 fw-bold text-primary">
+            <i class="bi bi-box-seam-fill"></i> HỆ THỐNG QUẢN LÝ DEPOT
+        </h1>
+        <p class="lead text-muted">Quản lý bãi container - Tân Cảng Sài Gòn</p>
+    </div>
+
+    <div class="row g-4 mb-5">
+        <div class="col-md-4">
+            <div class="card h-100 shadow-sm border-0 bg-primary text-white">
+                <div class="card-body text-center">
+                    <i class="bi bi-grid-3x3-gap-fill display-1"></i>
+                    <h3 class="mt-3">@Model.TotalBlocks</h3>
+                    <p class="mb-0">Block bãi</p>
+                </div>
+                <div class="card-footer bg-transparent border-0">
+                    <a asp-page="/Blocks/Index" class="btn btn-light w-100">Quản lý Block</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100 shadow-sm border-0 bg-success text-white">
+                <div class="card-body text-center">
+                    <i class="bi bi-box display-1"></i>
+                    <h3 class="mt-3">@Model.TotalContainers</h3>
+                    <p class="mb-0">Container</p>
+                </div>
+                <div class="card-footer bg-transparent border-0">
+                    <a asp-page="/Containers/Index" class="btn btn-light w-100">Quản lý Container</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100 shadow-sm border-0 bg-warning text-white">
+                <div class="card-body text-center">
+                    <i class="bi bi-truck display-1"></i>
+                    <h3 class="mt-3">@Model.TotalMovements</h3>
+                    <p class="mb-0">Lượt vào/ra</p>
+                </div>
+                <div class="card-footer bg-transparent border-0">
+                    <a asp-page="/Movements/Index" class="btn btn-light w-100">Lịch sử vận chuyển</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-md-6">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="bi bi-building"></i> Hãng khai thác</h5>
+                    <p class="text-muted">Quản lý các hãng khai thác container (CMA, MSC, HMM...)</p>
+                    <a asp-page="/LineOperators/Index" class="btn btn-outline-primary">Truy cập</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="bi bi-people"></i> Khách hàng</h5>
+                    <p class="text-muted">Quản lý khách hàng nhận container</p>
+                    <a asp-page="/Customers/Index" class="btn btn-outline-primary">Truy cập</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-12">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="bi bi-file-earmark-text"></i> Lệnh giao container</h5>
+                    <p class="text-muted">Quản lý lệnh giao container từ hãng khai thác (Line Operator). Theo đề bài, depot không được tự ý giao container khi chưa có lệnh này.</p>
+                    <a asp-page="/ReleaseOrders/Index" class="btn btn-outline-primary">Truy cập</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

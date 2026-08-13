@@ -1,0 +1,53 @@
+@page
+@model DEPOTCONTAINER.Pages.Movements.CreateModel
+@{
+    ViewData["Title"] = "Tạo Movement";
+}
+
+<h2 class="mt-4"><i class="bi bi-plus-circle"></i> Ghi nhận vận chuyển</h2>
+
+<div class="card shadow-sm mt-3">
+    <div class="card-body">
+        <form method="post">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">Số Container</label>
+                    <input asp-for="ContainerNumber" class="form-control" placeholder="VD: CMAU1234567" required />
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Loại di chuyển</label>
+                    <select asp-for="Input.MovementType" class="form-select" asp-items="Model.MovementTypes"></select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Phương tiện</label>
+                    <input asp-for="Input.Vehicle" class="form-control" placeholder="Biển số xe / Số tàu" required />
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Loại phương tiện</label>
+                    <input asp-for="Input.VehicleType" class="form-control" placeholder="Xe tải / Tàu / Xe nâng" />
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Số Seal</label>
+                    <input asp-for="Input.SealNumber" class="form-control" />
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Block đích</label>
+                    <select asp-for="Input.ToBlockId" class="form-select" asp-items="Model.Blocks">
+                        <option value="">-- Không chọn --</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Tài xế / Thuyền trưởng</label>
+                    <input asp-for="Input.DriverName" class="form-control" />
+                </div>
+                <div class="col-12">
+                    <label class="form-label">Ghi chú</label>
+                    <textarea asp-for="Input.Note" class="form-control" rows="2"></textarea>
+                </div>
+            </div>
+            <hr class="my-4" />
+            <a asp-page="Index" class="btn btn-outline-secondary">Hủy</a>
+            <button type="submit" class="btn btn-success"><i class="bi bi-save"></i> Lưu</button>
+        </form>
+    </div>
+</div>

@@ -1,0 +1,43 @@
+@page
+@model DEPOTCONTAINER.Pages.Customers.CreateModel
+@{
+    ViewData["Title"] = "Tạo khách hàng";
+}
+
+<h2 class="mt-4"><i class="bi bi-plus-circle"></i> Tạo Khách hàng</h2>
+
+<div class="card shadow-sm mt-3">
+    <div class="card-body">
+        <form method="post">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label asp-for="Input.TaxCode" class="form-label">MST <span class="text-danger">*</span></label>
+                    <input asp-for="Input.TaxCode" class="form-control" />
+                </div>
+                <div class="col-md-8">
+                    <label asp-for="Input.Name" class="form-label">Tên khách hàng <span class="text-danger">*</span></label>
+                    <input asp-for="Input.Name" class="form-control" />
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="Input.ContactPerson" class="form-label">Người liên hệ</label>
+                    <input asp-for="Input.ContactPerson" class="form-control" />
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="Input.Phone" class="form-label">SĐT</label>
+                    <input asp-for="Input.Phone" class="form-control" />
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="Input.Note" class="form-label">Ghi chú</label>
+                    <input asp-for="Input.Note" class="form-control" />
+                </div>
+                <div class="col-12">
+                    <label asp-for="Input.Address" class="form-label">Địa chỉ</label>
+                    <input asp-for="Input.Address" class="form-control" />
+                </div>
+            </div>
+            <hr class="my-4" />
+            <a asp-page="Index" class="btn btn-outline-secondary">Hủy</a>
+            <button type="submit" class="btn btn-success"><i class="bi bi-save"></i> Lưu</button>
+        </form>
+    </div>
+</div>

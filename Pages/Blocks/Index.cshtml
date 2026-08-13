@@ -1,0 +1,56 @@
+@page
+@model DEPOTCONTAINER.Pages.Blocks.IndexModel
+@{
+    ViewData["Title"] = "Quản lý Block";
+}
+
+<div class="d-flex justify-content-between align-items-center mt-4 mb-3">
+    <h2><i class="bi bi-grid-3x3-gap"></i> Quản lý Block bãi</h2>
+    <a asp-page="Create" class="btn btn-success"><i class="bi bi-plus-circle"></i> Tạo Block mới</a>
+</div>
+
+<div class="row g-3">
+    @if (Model.PagedData.Items.Count == 0)
+    {
+        <div class="col-12"><div class="alert alert-info">Chưa có block nào.</div></div>
+    }
+    @foreach (var b in Model.PagedData.Items)
+    {
+        <div class="col-md-6 col-lg-4">
+            <div class="card shadow-sm h-100 @(b.BlockType == BlockType.Virtual ? "border-warning" : "")">
+                <div class="card-header @(b.BlockType == BlockType.Virtual ? "bg-warning" : "bg-primary") text-white">
+                    <h5 class="mb-0"><i class="bi bi-box-seam"></i> Block @b.Code - @b.Name</h5>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">
+                        <span class="badge @(b.BlockType == BlockType.Virtual ? "bg-warning text-dark" : "bg-success")">
+                            @b.BlockTypeName
+                        </span>
+                    </p>
+                    @if (b.BlockType == BlockType.Physical)
+                    {
+                        <ul class="list-unstyled">
+                            <li><i class="bi bi-arrow-right"></i> Bay tối đa: <strong>@b.MaxBays</strong></li>
+                            <li><i class="bi bi-arrow-right"></i> Row tối đa: <strong>@b.MaxRows</strong></li>
+                            <li><i class="bi bi-arrow-right"></i> Tier tối đa: <strong>@b.MaxTiers</strong></li>
+                            @if (b.MaxContainerSize.HasValue)
+                            {
+                                <li><i class="bi bi-arrow-right"></i> Size tối đa: <strong>@((int)b.MaxContainerSize.Value) ft</strong></li>
+                            }
+                        </ul>
+                    }
+                    <hr />
+                    <p class="text-muted small">@b.Description</p>
+                </div>
+                <div class="card-footer text-end">
+                    <a asp-page="Layout" asp-route-id="@b.Id" class="btn btn-sm btn-outline-info">
+                        <i class="bi bi-grid"></i> Layout
+                    </a>
+                    <a asp-page="Delete" asp-route-id="@b.Id" class="btn btn-sm btn-outline-danger">
+                        <i class="bi bi-trash"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    }
+</div>

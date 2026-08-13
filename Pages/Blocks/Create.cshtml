@@ -1,0 +1,64 @@
+@page
+@model DEPOTCONTAINER.Pages.Blocks.CreateModel
+@{
+    ViewData["Title"] = "Tạo Block";
+}
+
+<h2 class="mt-4"><i class="bi bi-plus-circle"></i> Tạo Block mới</h2>
+
+<div class="card shadow-sm mt-3">
+    <div class="card-body">
+        <form method="post">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label asp-for="Input.Code" class="form-label">Mã Block <span class="text-danger">*</span></label>
+                    <input asp-for="Input.Code" class="form-control" placeholder="VD: A, B, C..." />
+                </div>
+                <div class="col-md-9">
+                    <label asp-for="Input.Name" class="form-label">Tên Block <span class="text-danger">*</span></label>
+                    <input asp-for="Input.Name" class="form-control" />
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="Input.BlockType" class="form-label">Loại Block</label>
+                    <select asp-for="Input.BlockType" class="form-select" asp-items="Model.BlockTypes"></select>
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="Input.MaxContainerSize" class="form-label">Size tối đa</label>
+                    <select asp-for="Input.MaxContainerSize" class="form-select" asp-items="Model.Sizes"></select>
+                </div>
+                <div class="col-md-2">
+                    <label asp-for="Input.MaxBays" class="form-label">Max Bay</label>
+                    <input asp-for="Input.MaxBays" type="number" min="0" class="form-control" />
+                </div>
+                <div class="col-md-1">
+                    <label asp-for="Input.MaxRows" class="form-label">Row</label>
+                    <input asp-for="Input.MaxRows" type="number" min="0" class="form-control" />
+                </div>
+                <div class="col-md-1">
+                    <label asp-for="Input.MaxTiers" class="form-label">Tier</label>
+                    <input asp-for="Input.MaxTiers" type="number" min="0" class="form-control" />
+                </div>
+                <div class="col-12">
+                    <label asp-for="Input.Description" class="form-label">Mô tả</label>
+                    <textarea asp-for="Input.Description" class="form-control" rows="2"></textarea>
+                </div>
+            </div>
+            <hr class="my-4" />
+            <div class="d-flex justify-content-between">
+                <a asp-page="Index" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Quay lại</a>
+                <button type="submit" class="btn btn-success"><i class="bi bi-save"></i> Tạo Block</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    // Auto disable MaxBays/Rows/Tiers khi chọn Virtual
+    document.querySelector('select[name="Input.BlockType"]').addEventListener('change', function () {
+        const isVirtual = this.value === '1';
+        document.querySelectorAll('input[name^="Input.Max"]').forEach(el => {
+            el.disabled = isVirtual;
+            if (isVirtual) el.value = '';
+        });
+    });
+</script>

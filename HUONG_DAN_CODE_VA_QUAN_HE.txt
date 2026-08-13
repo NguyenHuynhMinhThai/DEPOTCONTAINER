@@ -1,0 +1,970 @@
+================================================================================
+                    HƯỚNG DẪN TỪNG BƯỚC CODE DEPOTCONTAINER
+                  Hệ thống quản lý Depot Container (.NET 10 + EF Core)
+================================================================================
+
+MỤC LỤC
+--------
+PHẦN 1: TỔNG QUAN KIẾN TRÚC
+PHẦN 2: CÁC BƯỚC CODE TỪ ENTITY → DATABASE
+  Bước 1: BaseEntity - Lớp cha cho mọi entity
+  Bước 2: LineOperator - Hãng khai thác container
+  Bước 3: Customer - Khách hàng nhận container
+  Bước 4: Block - Bãi chứa container
+  Bước 5: Bay - Bay trong Block
+  Bước 6: Row - Hàng trong Bay
+  Bước 7: Tier - Vị trí xếp container
+  Bước 8: Container - Container chính
+  Bước 9: ContainerMovement - Lịch sử vào/ra/di chuyển
+  Bước 10: ReleaseOrder - Lệnh giao container
+  Bước 11: ReleaseOrderDetail - Chi tiết lệnh giao
+  Bước 12: DepotDbContext - Cấu hình database
+  Bước 13: Program.cs - Khởi tạo & DI
+PHẦN 3: SƠ ĐỒ QUAN HỆ GIỮA CÁC ENTITY
+PHẦN 4: LUỒNG HOẠT ĐỘNG
+
+================================================================================
+PHẦN 1: TỔNG QUAN KIẾN TRÚC
+================================================================================
+
+Project DEPOTCONTAINER dùng .NET 10 + Entity Framework Core 9 (Pomelo MySQL),
+chia theo kiến trúc 3-Tier:
+
+   HTTP Request
+       │
+       ▼
+   ┌─────────────────────────────────────────┐
+   │  Controllers/Api/                       │  ← Tầng Presentation (API)
+   │  - ContainersController                 │
+   │  - BlocksController                     │
+   │  - MovementsController                  │
+   │  - LineOperatorsController              │
+   └─────────────────────────────────────────┘
+       │ gọi
+       ▼
+   ┌─────────────────────────────────────────┐
+   │  Services/                              │  ← Tầng Business Logic
+   │  - ContainerService                     │
+   │  - BlockService                         │
+   │  - ContainerMovementService             │
+   │  - ReleaseOrderService                  │
+   │  - LineOperatorService / CustomerService│
+   └─────────────────────────────────────────┘
+       │ gọi
+       ▼
+   ┌─────────────────────────────────────────┐
+   │  Repositories/                          │  ← Tầng Data Access
+   │  - GenericRepository<T>                 │
+   │  - Specific Repositories                │
+   │  - UnitOfWork (giao dịch)               │
+   └─────────────────────────────────────────┘
+       │ gọi
+       ▼
+   ┌─────────────────────────────────────────┐
+   │  DepotDbContext (Entity Framework Core) │  ← ORM, kết nối MySQL
+   └─────────────────────────────────────────┘
+       │
+       ▼
+   ┌─────────────────────────────────────────┐
+   │  MySQL Database (depotdb)               │
+   └─────────────────────────────────────────┘
+
+Quy trình: Controller nhận request → gọi Service xử lý nghiệp vụ → gọi
+Repository truy vấn DB thông qua EF Core → trả về DTO cho Client.
+
+Đăng ký dịch vụ (DI) trong Program.cs (Scoped - 1 instance / request):
+   - IUnitOfWork → UnitOfWork
+   - IContainerService → ContainerService
+   - IBlockService → BlockService
+   - ILineOperatorService → LineOperatorService
+   - ICustomerService → CustomerService
+   - IContainerMovementService → ContainerMovementService
+   - IReleaseOrderService → ReleaseOrderService
+
+Singleton: DepotConfigManager, InMemoryCache.
+
+================================================================================
+PHẦN 2: CÁC BƯỚC CODE TỪ ENTITY → DATABASE
+================================================================================
+
+--------------------------------------------------------------------------------
+BƯỚC 1: BaseEntity - Lớp cha cho mọi entity
+--------------------------------------------------------------------------------
+File: Models/Entities/BaseEntity.cs
+
+```csharp
+public abstract class BaseEntity
+{
+    [Key][Column("id")]
+    public int Id { get; set; }
+
+    [Column("created_at")]
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+    [Column("updated_at")]
+    public DateTime? UpdatedAt { get; set; }
+
+    [Column("is_deleted")]
+    public bool IsDeleted { get; set; } = false;
+}
+```
+
+Mục đích: cung cấp 4 trường chung cho mọi bảng (Id, CreatedAt, UpdatedAt,
+IsDeleted). IsDeleted dùng cho soft-delete (xóa mềm), kết hợp với global query
+filter trong DbContext để tự động loại trừ khi truy vấn.
+
+--------------------------------------------------------------------------------
+BƯỚC 2: LineOperator - Hãng khai thác container
+--------------------------------------------------------------------------------
+File: Models/Entities/LineOperator.cs
+
+```csharp
+public class LineOperator : BaseEntity
+{
+    [Required][MaxLength(4)][Column("owner_code")]
+    public string OwnerCode { get; set; } = string.Empty;   // VD: "CMA"
+
+    [Required][MaxLength(200)][Column("name")]
+    public string Name { get; set; } = string.Empty;        // VD: "CMA CGM"
+
+    [MaxLength(50)][Column("tax_code")]
+    public string? TaxCode { get; set; }
+
+    [MaxLength(500)][Column("address")]
+    public string? Address { get; set; }
+
+    [MaxLength(20)][Column("phone")]
+    public string? Phone { get; set; }
+
+    [MaxLength(100)][Column("email")]
+    public string? Email { get; set; }
+
+    [MaxLength(1000)][Column("note")]
+    public string? Note { get; set; }
+
+    // Navigation: 1 LineOperator có nhiều Container
+    public virtual ICollection<Container> Containers { get; set; } = new List<Container>();
+    // Navigation: 1 LineOperator có nhiều ReleaseOrder
+    public virtual ICollection<ReleaseOrder> ReleaseOrders { get; set; } = new List<ReleaseOrder>();
+}
+```
+
+Quan hệ:
+   LineOperator (1) → (n) Container         (qua Container.LineOperatorId, Restrict)
+   LineOperator (1) → (n) ReleaseOrder      (qua ReleaseOrder.LineOperatorId, Restrict)
+
+Cấu hình trong DbContext:
+   - Index unique trên OwnerCode (mỗi hãng có 1 mã duy nhất)
+   - OnDelete Restrict: không cho xóa hãng nếu còn container / lệnh giao
+
+--------------------------------------------------------------------------------
+BƯỚC 3: Customer - Khách hàng nhận container
+--------------------------------------------------------------------------------
+File: Models/Entities/Customer.cs
+
+```csharp
+public class Customer : BaseEntity
+{
+    [Required][MaxLength(20)][Column("tax_code")]
+    public string TaxCode { get; set; } = string.Empty;     // MST - định danh
+
+    [Required][MaxLength(200)][Column("name")]
+    public string Name { get; set; } = string.Empty;
+
+    [MaxLength(500)][Column("address")]
+    public string? Address { get; set; }
+
+    [MaxLength(20)][Column("phone")]
+    public string? Phone { get; set; }
+
+    [MaxLength(100)][Column("contact_person")]
+    public string? ContactPerson { get; set; }
+
+    [MaxLength(1000)][Column("note")]
+    public string? Note { get; set; }
+
+    public virtual ICollection<ReleaseOrder> ReleaseOrders { get; set; } = new();
+}
+```
+
+Quan hệ:
+   Customer (1) → (n) ReleaseOrder    (qua ReleaseOrder.CustomerId, Restrict)
+
+Cấu hình trong DbContext: Index unique trên TaxCode (MST không trùng).
+
+--------------------------------------------------------------------------------
+BƯỚC 4: Block - Bãi chứa container
+--------------------------------------------------------------------------------
+File: Models/Entities/Block.cs
+
+```csharp
+public class Block : BaseEntity
+{
+    [Required][MaxLength(20)][Column("code")]
+    public string Code { get; set; } = string.Empty;        // VD: "A", "B", "V-01"
+
+    [Required][MaxLength(100)][Column("name")]
+    public string Name { get; set; } = string.Empty;        // VD: "Block A - 20ft"
+
+    [Column("block_type")]
+    public BlockType BlockType { get; set; } = BlockType.Physical;
+
+    [Column("max_bays")]
+    public int? MaxBays { get; set; }                       // Chỉ dùng cho Physical
+
+    [Column("max_rows")]
+    public int? MaxRows { get; set; }                       // Số row trong 1 bay
+
+    [Column("max_tiers")]
+    public int? MaxTiers { get; set; }                      // Số tầng xếp chồng
+
+    [Column("max_container_size")]
+    public ContainerSize? MaxContainerSize { get; set; }    // 20/40/45 feet
+
+    [MaxLength(500)][Column("description")]
+    public string? Description { get; set; }
+
+    [Column("is_active")]
+    public bool IsActive { get; set; } = true;
+
+    // Navigation
+    public virtual ICollection<Bay> Bays { get; set; } = new();
+    public virtual ICollection<Container> Containers { get; set; } = new();
+}
+```
+
+Block có 2 loại:
+   - Physical: có layout Bay → Row → Tier, dùng để xếp container thật.
+   - Virtual: block ảo, không sinh layout (vd: block chứa container hư hỏng).
+
+Quan hệ:
+   Block (1) → (n) Bay                (Cascade: xóa block → xóa hết bay con)
+   Block (1) → (n) Container          (SetNull: xóa block → container.CurrentBlockId = null)
+
+Cấu hình: Index unique trên Code.
+
+--------------------------------------------------------------------------------
+BƯỚC 5: Bay - Bay trong Block
+--------------------------------------------------------------------------------
+File: Models/Entities/Bay.cs
+
+```csharp
+public class Bay : BaseEntity
+{
+    [Column("block_id")]
+    public int BlockId { get; set; }
+
+    [Required][Column("bay_number")]
+    public int BayNumber { get; set; }                     // 1, 2, 3, ...
+
+    [Column("max_rows")]
+    public int MaxRows { get; set; } = 10;
+
+    [Column("max_tiers")]
+    public int MaxTiers { get; set; } = 5;
+
+    [Column("container_size")]
+    public ContainerSize ContainerSize { get; set; } = ContainerSize.Size20;
+
+    [MaxLength(200)][Column("note")]
+    public string? Note { get; set; }
+
+    public virtual Block? Block { get; set; }
+    public virtual ICollection<Row> Rows { get; set; } = new();
+}
+```
+
+Quy tắc (BayFactory):
+   - Bay lẻ (1, 3, 5...)  → ContainerSize = Size20
+   - Bay chẵn (2, 4, 6...) → ContainerSize = Size40
+
+Quan hệ:
+   Bay (n) → (1) Block       (Cascade)
+   Bay (1) → (n) Row         (Cascade)
+
+Cấu hình: Index unique composite (BlockId, BayNumber) - không trùng số bay
+trong cùng 1 block.
+
+--------------------------------------------------------------------------------
+BƯỚC 6: Row - Hàng trong Bay
+--------------------------------------------------------------------------------
+File: Models/Entities/Row.cs
+
+```csharp
+public class Row : BaseEntity
+{
+    [Column("bay_id")]
+    public int BayId { get; set; }
+
+    [Required][Column("row_number")]
+    public int RowNumber { get; set; }                     // 1, 2, 3, ...
+
+    [Column("max_tiers")]
+    public int MaxTiers { get; set; } = 5;
+
+    [MaxLength(200)][Column("note")]
+    public string? Note { get; set; }
+
+    public virtual Bay? Bay { get; set; }
+    public virtual ICollection<Tier> Tiers { get; set; } = new();
+}
+```
+
+Row là hàng container theo chiều rộng trong 1 bay (hướng từ trước ra sau).
+
+Quan hệ:
+   Row (n) → (1) Bay        (Cascade)
+   Row (1) → (n) Tier       (Cascade)
+
+Cấu hình: Index unique composite (BayId, RowNumber).
+
+--------------------------------------------------------------------------------
+BƯỚC 7: Tier - Vị trí xếp container
+--------------------------------------------------------------------------------
+File: Models/Entities/Tier.cs
+
+```csharp
+public class Tier : BaseEntity
+{
+    [Column("row_id")]
+    public int RowId { get; set; }
+
+    [Required][Column("tier_number")]
+    public int TierNumber { get; set; }                    // 1, 2, 3, ... (1 = dưới cùng)
+
+    [Column("is_occupied")]
+    public bool IsOccupied { get; set; } = false;          // true nếu đã có container
+
+    [Column("container_id")]
+    public int? ContainerId { get; set; }                  // Nullable: vị trí trống
+
+    public virtual Row? Row { get; set; }
+    public virtual Container? Container { get; set; }
+}
+```
+
+Tier là tầng xếp chồng theo chiều dọc. Mỗi tier chứa 0 hoặc 1 container.
+
+Quan hệ:
+   Tier (n) → (1) Row         (Cascade)
+   Tier (1) → (0..1) Container (SetNull: xóa container → tier.ContainerId = null)
+
+Cấu hình: Index unique composite (RowId, TierNumber).
+
+--------------------------------------------------------------------------------
+BƯỚC 8: Container - Container chính
+--------------------------------------------------------------------------------
+File: Models/Entities/Container.cs
+
+```csharp
+public class Container : BaseEntity
+{
+    [Required][MaxLength(11)][Column("container_number")]
+    public string ContainerNumber { get; set; } = string.Empty;  // ISO 6346, VD: CMAU1234567
+
+    [Column("container_type")]
+    public ContainerType ContainerType { get; set; }             // U=Dry, R=Reefer...
+
+    [Required][MaxLength(10)][Column("iso_code")]
+    public string IsoCode { get; set; } = string.Empty;          // VD: 22G1, 45R1
+
+    [Column("size")]
+    public ContainerSize Size { get; set; }                      // 20/40/45 feet
+
+    [Column("max_weight")]
+    public decimal MaxWeight { get; set; }                       // Trọng lượng tối đa
+
+    [Column("tare_weight")]
+    public decimal TareWeight { get; set; }                      // Trọng lượng vỏ
+
+    [Column("manufacture_date")]
+    public DateTime? ManufactureDate { get; set; }
+
+    // Foreign keys
+    [Column("line_operator_id")]
+    public int? LineOperatorId { get; set; }
+
+    [Column("current_block_id")]
+    public int? CurrentBlockId { get; set; }                    // Vị trí hiện tại
+
+    [Column("current_bay_id")]
+    public int? CurrentBayId { get; set; }
+
+    [Column("current_row_id")]
+    public int? CurrentRowId { get; set; }
+
+    [Column("current_tier_id")]
+    public int? CurrentTierId { get; set; }
+
+    [Column("condition")]
+    public ContainerCondition Condition { get; set; } = ContainerCondition.Normal;
+
+    [Column("category")]
+    public ContainerCategory Category { get; set; } = ContainerCategory.CategoryA;
+
+    [MaxLength(1000)][Column("damage_description")]
+    public string? DamageDescription { get; set; }
+
+    [Column("is_in_yard")]
+    public bool IsInYard { get; set; } = false;                  // true = đang ở trong bãi
+
+    // Navigation
+    public virtual LineOperator? LineOperator { get; set; }
+    public virtual Block? CurrentBlock { get; set; }
+    public virtual Bay? CurrentBay { get; set; }
+    public virtual Row? CurrentRow { get; set; }
+    public virtual Tier? CurrentTier { get; set; }
+    public virtual ICollection<ContainerMovement> Movements { get; set; } = new();
+}
+```
+
+Cấu trúc Container Number (ISO 6346, 11 ký tự):
+   ┌──────────┬──────┬──────────┬──────────┐
+   │OwnerCode │ Type │  Serial  │ CheckDig │
+   │  (3 chữ) │(1 chữ)│ (6 số)  │  (1 số)  │
+   │   CMA    │  U   │  123456  │    7     │
+   └──────────┴──────┴──────────┴──────────┘
+   Tổng: 4 chữ cái + 7 chữ số = 11 ký tự.
+
+Quan hệ:
+   Container (n) → (1) LineOperator   (Restrict)
+   Container (n) → (1) CurrentBlock   (SetNull)
+   Container (n) → (1) CurrentBay     (SetNull)
+   Container (n) → (1) CurrentRow     (SetNull)
+   Container (n) → (1) CurrentTier    (SetNull)
+   Container (1) → (n) ContainerMovement  (Cascade)
+
+Cấu hình: Index unique trên ContainerNumber.
+
+--------------------------------------------------------------------------------
+BƯỚC 9: ContainerMovement - Lịch sử vào/ra/di chuyển
+--------------------------------------------------------------------------------
+File: Models/Entities/ContainerMovement.cs
+
+```csharp
+public class ContainerMovement : BaseEntity
+{
+    [Column("container_id")]
+    public int ContainerId { get; set; }
+
+    [Column("movement_type")]
+    public MovementType MovementType { get; set; }        // In/Out/Internal
+
+    [Column("movement_date")]
+    public DateTime MovementDate { get; set; } = DateTime.UtcNow;
+
+    [Required][MaxLength(100)][Column("vehicle")]
+    public string Vehicle { get; set; } = string.Empty;   // Số xe, số tàu
+
+    [MaxLength(50)][Column("vehicle_type")]
+    public string? VehicleType { get; set; }
+
+    [MaxLength(50)][Column("seal_number")]
+    public string? SealNumber { get; set; }
+
+    [MaxLength(100)][Column("from_location")]
+    public string? FromLocation { get; set; }
+
+    [MaxLength(100)][Column("to_location")]
+    public string? ToLocation { get; set; }
+
+    [Column("to_block_id")]
+    public int? ToBlockId { get; set; }
+
+    [MaxLength(100)][Column("driver_name")]
+    public string? DriverName { get; set; }
+
+    [MaxLength(50)][Column("driver_id")]
+    public string? DriverId { get; set; }
+
+    [Column("release_order_id")]
+    public int? ReleaseOrderId { get; set; }              // Gắn với lệnh giao (nếu có)
+
+    [MaxLength(500)][Column("note")]
+    public string? Note { get; set; }
+
+    public virtual Container? Container { get; set; }
+    public virtual Block? ToBlock { get; set; }
+    public virtual ReleaseOrder? ReleaseOrder { get; set; }
+}
+```
+
+3 loại movement:
+   - In: Container vào bãi → IsInYard=true, CurrentBlockId=ToBlockId.
+   - Out: Container ra khỏi bãi → IsInYard=false, clear các FK location.
+   - Internal: Di chuyển nội bộ giữa các vị trí trong bãi.
+
+Quan hệ:
+   Movement (n) → (1) Container     (Cascade: xóa container → xóa movement)
+   Movement (n) → (0..1) Block      (SetNull: xóa block → ToBlockId = null)
+   Movement (n) → (0..1) ReleaseOrder (SetNull)
+
+--------------------------------------------------------------------------------
+BƯỚC 10: ReleaseOrder - Lệnh giao container
+--------------------------------------------------------------------------------
+File: Models/Entities/ReleaseOrder.cs
+
+```csharp
+public class ReleaseOrder : BaseEntity
+{
+    [Required][MaxLength(50)][Column("order_number")]
+    public string OrderNumber { get; set; } = string.Empty;  // Số lệnh giao
+
+    [Column("line_operator_id")]
+    public int LineOperatorId { get; set; }                  // Hãng ra lệnh
+
+    [Column("customer_id")]
+    public int CustomerId { get; set; }                      // Khách nhận
+
+    [Column("valid_until")]
+    public DateTime ValidUntil { get; set; }                 // Hạn lệnh
+
+    [MaxLength(100)][Column("export_vessel")]
+    public string? ExportVessel { get; set; }                // Chuyến tàu xuất
+
+    [Column("export_date")]
+    public DateTime? ExportDate { get; set; }
+
+    [Column("status")]
+    public ReleaseOrderStatus Status { get; set; } = ReleaseOrderStatus.New;
+    // New → InProgress → Completed / Cancelled / Expired
+
+    [MaxLength(1000)][Column("description")]
+    public string? Description { get; set; }
+
+    public virtual LineOperator? LineOperator { get; set; }
+    public virtual Customer? Customer { get; set; }
+    public virtual ICollection<ReleaseOrderDetail> Details { get; set; } = new();
+    public virtual ICollection<ContainerMovement> Movements { get; set; } = new();
+}
+```
+
+Quan hệ:
+   ReleaseOrder (n) → (1) LineOperator   (Restrict)
+   ReleaseOrder (n) → (1) Customer       (Restrict)
+   ReleaseOrder (1) → (n) ReleaseOrderDetail  (Cascade)
+   ReleaseOrder (1) → (n) ContainerMovement   (qua Movement.ReleaseOrderId, SetNull)
+
+Cấu hình: Index unique trên OrderNumber.
+
+--------------------------------------------------------------------------------
+BƯỚC 11: ReleaseOrderDetail - Chi tiết lệnh giao
+--------------------------------------------------------------------------------
+File: Models/Entities/ReleaseOrderDetail.cs
+
+```csharp
+public class ReleaseOrderDetail : BaseEntity
+{
+    [Column("release_order_id")]
+    public int ReleaseOrderId { get; set; }
+
+    [Column("container_size")]
+    public ContainerSize ContainerSize { get; set; }        // 20/40/45 feet
+
+    [Column("container_type")]
+    public ContainerType ContainerType { get; set; }        // Dry/Reefer...
+
+    [Column("quantity")]
+    public int Quantity { get; set; }                       // Số lượng cần giao
+
+    [Column("delivered_quantity")]
+    public int DeliveredQuantity { get; set; } = 0;        // Đã giao thực tế
+
+    [MaxLength(500)][Column("note")]
+    public string? Note { get; set; }
+
+    public virtual ReleaseOrder? ReleaseOrder { get; set; }
+}
+```
+
+Cho biết cần giao bao nhiêu container mỗi loại. VD: 10 con 20ft Dry + 5 con
+40ft Reefer.
+
+Quan hệ:
+   ReleaseOrderDetail (n) → (1) ReleaseOrder (Cascade)
+
+--------------------------------------------------------------------------------
+BƯỚC 12: DepotDbContext - Cấu hình database
+--------------------------------------------------------------------------------
+File: Data/DepotDbContext.cs
+
+```csharp
+public class DepotDbContext : DbContext
+{
+    // Khai báo 10 bảng (DbSet)
+    public DbSet<LineOperator> LineOperators { get; set; }
+    public DbSet<Customer> Customers { get; set; }
+    public DbSet<Block> Blocks { get; set; }
+    public DbSet<Bay> Bays { get; set; }
+    public DbSet<Row> Rows { get; set; }
+    public DbSet<Tier> Tiers { get; set; }
+    public DbSet<Container> Containers { get; set; }
+    public DbSet<ContainerMovement> ContainerMovements { get; set; }
+    public DbSet<ReleaseOrder> ReleaseOrders { get; set; }
+    public DbSet<ReleaseOrderDetail> ReleaseOrderDetails { get; set; }
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        base.OnModelCreating(modelBuilder);
+
+        // 1. Enum → int (lưu trong DB dưới dạng số nguyên)
+        modelBuilder.Entity<Container>()
+            .Property(c => c.ContainerType).HasConversion<int>();
+        modelBuilder.Entity<Container>()
+            .Property(c => c.Size).HasConversion<int>();
+        // ... các enum khác tương tự
+
+        // 2. Unique indexes
+        modelBuilder.Entity<LineOperator>()
+            .HasIndex(l => l.OwnerCode).IsUnique();
+        modelBuilder.Entity<Customer>()
+            .HasIndex(c => c.TaxCode).IsUnique();
+        modelBuilder.Entity<Block>()
+            .HasIndex(b => b.Code).IsUnique();
+        modelBuilder.Entity<Container>()
+            .HasIndex(c => c.ContainerNumber).IsUnique();
+        modelBuilder.Entity<ReleaseOrder>()
+            .HasIndex(r => r.OrderNumber).IsUnique();
+
+        // Composite unique indexes
+        modelBuilder.Entity<Bay>()
+            .HasIndex(b => new { b.BlockId, b.BayNumber }).IsUnique();
+        modelBuilder.Entity<Row>()
+            .HasIndex(r => new { r.BayId, r.RowNumber }).IsUnique();
+        modelBuilder.Entity<Tier>()
+            .HasIndex(t => new { t.RowId, t.TierNumber }).IsUnique();
+
+        // 3. Relationships (chi tiết xem Bước 13)
+
+        // 4. Global query filter cho soft-delete
+        modelBuilder.Entity<LineOperator>()
+            .HasQueryFilter(e => !e.IsDeleted);
+        // ... apply cho cả 10 entity
+    }
+}
+```
+
+--------------------------------------------------------------------------------
+BƯỚC 13: Program.cs - Khởi tạo & Dependency Injection
+--------------------------------------------------------------------------------
+File: Program.cs
+
+```csharp
+var builder = WebApplication.CreateBuilder(args);
+
+// 1. Đọc connection string từ appsettings.json
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? "server=localhost;port=3306;database=depotdb;user=root;password=root";
+
+// 2. Đăng ký DbContext (Pomelo MySQL)
+builder.Services.AddDbContext<DepotDbContext>(options =>
+    options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
+
+// 3. Đăng ký Repository (Scoped - 1 instance / request)
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+
+// 4. Đăng ký Service (Scoped)
+builder.Services.AddScoped<IContainerService, ContainerService>();
+builder.Services.AddScoped<IBlockService, BlockService>();
+builder.Services.AddScoped<ILineOperatorService, LineOperatorService>();
+builder.Services.AddScoped<ICustomerService, CustomerService>();
+builder.Services.AddScoped<IContainerMovementService, ContainerMovementService>();
+builder.Services.AddScoped<IReleaseOrderService, ReleaseOrderService>();
+
+// 5. Đăng ký Singleton (DepotConfigManager, InMemoryCache)
+builder.Services.AddSingleton<DepotConfigManager>(
+    _ => DepotConfigManager.Instance);
+
+var app = builder.Build();
+
+// 6. Middleware pipeline
+app.UseSwagger();
+app.UseSwaggerUI();
+app.UseStaticFiles();
+app.UseRouting();
+app.UseAuthorization();
+app.MapControllers();
+app.MapRazorPages();
+
+// 7. Tự động tạo database + seed data khi start
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<DepotDbContext>();
+    context.Database.EnsureCreated();    // Tạo bảng nếu chưa có
+    DbSeeder.Seed(context);              // Thêm dữ liệu mẫu
+}
+
+app.Run();
+```
+
+================================================================================
+PHẦN 3: SƠ ĐỒ QUAN HỆ GIỮA CÁC ENTITY
+================================================================================
+
+Sơ đồ tổng quan (10 bảng):
+
+   ┌─────────────────┐
+   │  LineOperator   │  (Bảng cha: hãng khai thác)
+   │  PK: id         │
+   │  UQ: owner_code │
+   └──┬──────────────┘
+      │ 1
+      │
+      ├──────────────────────────────┐
+      │ n                          │ n
+      ▼                            ▼
+   ┌─────────────────┐    ┌──────────────────┐
+   │   Container     │    │  ReleaseOrder    │
+   │   PK: id        │    │  PK: id          │
+   │   UQ: container │    │  UQ: order_num   │
+   │      _number    │    │  FK: line_op_id  │
+   │   FK: line_op_id│    │  FK: customer_id │
+   └──┬──────────────┘    └──┬───────────────┘
+      │ 1                    │ 1
+      │                      │
+      │ n                    ├─────────────────┐
+      ▼                      │ n               │ n
+   ┌──────────────────────┐  │                 │
+   │ ContainerMovement    │  │                 ▼
+   │ PK: id               │  │            ┌─────────────────────────┐
+   │ FK: container_id     │  │            │ ReleaseOrderDetail       │
+   │ FK: to_block_id (0..1)│ │            │ PK: id                  │
+   │ FK: release_order_id │◄─┘            │ FK: release_order_id    │
+   │     (0..1)           │               │ size, type, quantity    │
+   └──────────────────────┘               └─────────────────────────┘
+
+   ┌─────────────────┐
+   │    Customer     │  (Bảng cha: khách hàng)
+   │    PK: id       │
+   │    UQ: tax_code │
+   └──┬──────────────┘
+      │ 1
+      │ n
+      ▼
+   ┌─────────────────┐
+   │  ReleaseOrder   │  (xem trên)
+
+   ┌─────────────────┐         ┌─────────────────┐         ┌─────────────────┐
+   │     Block       │  1   n  │      Bay        │  1   n  │      Row        │
+   │   PK: id        │────────►│   PK: id        │────────►│   PK: id        │
+   │   UQ: code      │ Cascade │ FK: block_id    │ Cascade │ FK: bay_id      │
+   │   block_type    │         │   bay_number    │         │   row_number    │
+   └─────────────────┘         └─────────────────┘         └────────┬────────┘
+                                                                   │ 1
+                                                                   │ n
+                                                                   ▼
+                                                            ┌─────────────────┐
+                                                            │      Tier       │
+                                                            │   PK: id        │
+                                                            │ FK: row_id      │
+                                                            │ FK: container_id│
+                                                            │   (0..1)        │
+                                                            └─────────────────┘
+
+   Container có 4 FK trỏ vào Block/Bay/Row/Tier (vị trí hiện tại, đều nullable,
+   OnDelete = SetNull):
+      Container.CurrentBlockId → Block.id
+      Container.CurrentBayId   → Bay.id
+      Container.CurrentRowId   → Row.id
+      Container.CurrentTierId  → Tier.id
+
+----------------------------------------------------------------------
+BẢNG TÓM TẮT QUAN HỆ:
+----------------------------------------------------------------------
+Quan hệ                                | Loại      | OnDelete
+---------------------------------------|-----------|------------
+LineOperator → Container               | 1 - n     | Restrict
+LineOperator → ReleaseOrder            | 1 - n     | Restrict
+Customer → ReleaseOrder                | 1 - n     | Restrict
+ReleaseOrder → ReleaseOrderDetail      | 1 - n     | Cascade
+ReleaseOrder → ContainerMovement       | 1 - n     | SetNull
+Container → ContainerMovement          | 1 - n     | Cascade
+Container → LineOperator               | n - 1     | Restrict
+Container → CurrentBlock               | n - 1     | SetNull
+Container → CurrentBay                 | n - 1     | SetNull
+Container → CurrentRow                 | n - 1     | SetNull
+Container → CurrentTier                | n - 1     | SetNull
+Block → Bay                            | 1 - n     | Cascade
+Block → Container (current)            | 1 - n     | SetNull
+Bay → Row                              | 1 - n     | Cascade
+Row → Tier                             | 1 - n     | Cascade
+Tier → Container                       | 1 - 0..1  | SetNull
+ContainerMovement → ToBlock            | n - 1     | SetNull
+ContainerMovement → ReleaseOrder       | n - 1     | SetNull
+
+GIẢI THÍCH CÁC LOẠI ONDELETE:
+   - Cascade:  Xóa cha → tự động xóa luôn con.
+               VD: Xóa Block → tự động xóa hết Bay → Row → Tier trong block đó.
+   - Restrict: Có con → KHÔNG cho xóa cha. Phải xóa con trước.
+               VD: Còn Container → không được xóa LineOperator.
+   - SetNull:  Xóa cha → set FK của con thành NULL (giữ lại con).
+               VD: Xóa Block → container vẫn còn, chỉ CurrentBlockId = null.
+
+----------------------------------------------------------------------
+BẢNG TÓM TẮT INDEX UNIQUE:
+----------------------------------------------------------------------
+Bảng                       | Cột unique
+---------------------------|----------------------------------
+LineOperator               | owner_code
+Customer                   | tax_code
+Block                      | code
+Container                  | container_number
+ReleaseOrder               | order_number
+Bay                        | (block_id, bay_number)
+Row                        | (bay_id, row_number)
+Tier                       | (row_id, tier_number)
+
+================================================================================
+PHẦN 4: LUỒNG HOẠT ĐỘNG
+================================================================================
+
+LUỒNG 1: TẠO BLOCK MỚI (Physical)
+-----------------------------------
+1. POST /Blocks/Create → BlocksController.Create (Razor Page).
+2. Tạo Block mới trong DB.
+3. Nếu Block.BlockType = Physical → gọi BayFactory.CreateBaysForBlock:
+   - Với mỗi bay từ 1 → MaxBays: tạo Bay (lẻ=Size20, chẵn=Size40).
+   - Với mỗi bay: tạo MaxRows Row.
+   - Với mỗi row: tạo MaxTiers Tier (IsOccupied=false).
+4. Toàn bộ layout lưu vào DB trong 1 transaction.
+
+LUỒNG 2: CONTAINER VÀO BÃI
+-----------------------------
+1. POST /Movements/Create với MovementType=In.
+2. ContainerMovementService.CreateAsync:
+   - Tạo 1 ContainerMovement (MovementType=In, ToBlockId=block đích).
+   - Cập nhật Container: IsInYard=true, CurrentBlockId=ToBlockId.
+   - CurrentBay/Row/Tier: set theo vị trí cụ thể trong block (nếu có).
+   - Tier.IsOccupied=true, Tier.ContainerId=containerId.
+
+LUỒNG 3: CONTAINER RA BÃI (theo lệnh giao)
+--------------------------------------------
+1. POST /api/release-orders/{id}/execute với containerId, vehicle.
+2. ReleaseOrderService.ExecuteReleaseAsync:
+   - Validate: ReleaseOrder.Status phải là New hoặc InProgress.
+   - Validate: ValidUntil >= hôm nay.
+   - Validate: Container.IsInYard = true.
+   - Tạo 1 ContainerMovement (MovementType=Out, ReleaseOrderId=orderId).
+   - Cập nhật Container: IsInYard=false, clear CurrentBlock/Bay/Row/Tier.
+   - Cập nhật ReleaseOrderDetail.DeliveredQuantity++.
+   - Nếu tất cả details đã giao đủ → ReleaseOrder.Status=Completed,
+     ngược lại InProgress.
+
+LUỒNG 4: TRUY VẤN CONTAINER THEO VỊ TRÍ
+----------------------------------------
+Query lấy tất cả container đang ở block X, bay Y:
+   SELECT c.*
+   FROM Containers c
+   INNER JOIN Blocks b ON c.current_block_id = b.id
+   LEFT JOIN Bays bay ON c.current_bay_id = bay.id
+   WHERE c.is_deleted = false
+     AND c.current_block_id = @BlockId
+   ORDER BY bay.bay_number, c.current_row_id, c.current_tier_id;
+
+Trong EF Core (LINQ):
+   var containers = await _context.Containers
+       .Include(c => c.CurrentBlock)
+       .Include(c => c.CurrentBay)
+       .Include(c => c.CurrentRow)
+       .Include(c => c.CurrentTier)
+       .Where(c => c.CurrentBlockId == blockId)
+       .Where(c => !c.IsDeleted)
+       .OrderBy(c => c.CurrentBay!.BayNumber)
+       .ThenBy(c => c.CurrentRow!.RowNumber)
+       .ThenBy(c => c.CurrentTier!.TierNumber)
+       .ToListAsync();
+
+================================================================================
+PHỤ LỤC: FILE CẤU HÌNH LIÊN QUAN
+================================================================================
+
+File: appsettings.json
+----------------------
+{
+  "ConnectionStrings": {
+    "DefaultConnection": "server=localhost;port=3306;database=depotdb;user=root;password=root123;TreatTinyAsBoolean=false;"
+  },
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft.AspNetCore": "Warning"
+    }
+  },
+  "AllowedHosts": "*"
+}
+
+File: docker-compose.yml (chạy bằng Docker)
+-------------------------------------------
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: depot-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: depotdb
+    ports:
+      - "3307:3306"          # Host 3307 → Container 3306
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  app:
+    image: mcr.microsoft.com/dotnet/sdk:10.0
+    container_name: depot-app
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__DefaultConnection: "server=mysql;port=3306;database=depotdb;user=root;password=root123;"
+    ports:
+      - "8080:8080"
+    volumes:
+      - .:/app
+
+Để kết nối MySQL Workbench từ máy host (khi chạy bằng Docker):
+   Hostname: 127.0.0.1
+   Port:     3307
+   Username: root
+   Password: root123
+   Schema:   depotdb
+
+================================================================================
+TÓM TẮT NGUYÊN LÝ THIẾT KẾ
+================================================================================
+
+1. Repository Pattern (Generic + Specific):
+   - IGenericRepository<T>: CRUD chung cho mọi entity.
+   - Specific Repositories: thêm method riêng (vd: GetByContainerNumberAsync).
+   - UnitOfWork: gom các repo + transaction.
+
+2. Service Pattern (Business Logic):
+   - Mỗi Service tương ứng 1 entity, có BaseService kế thừa để trả
+     ApiResponse<T> thống nhất.
+   - Service xử lý nghiệp vụ (validate, transaction, ...).
+
+3. Soft Delete (Xóa mềm):
+   - Repository.Remove chỉ set IsDeleted=true, KHÔNG xóa khỏi DB.
+   - Global query filter (HasQueryFilter) tự động loại trừ khi truy vấn.
+   - Muốn lấy cả bản ghi đã xóa: .IgnoreQueryFilters().
+
+4. Singleton Pattern:
+   - DepotConfigManager: cấu hình runtime (max tiers, rows, bays...).
+   - InMemoryCache: cache trong bộ nhớ.
+   - Dùng double-check locking + DI factory delegate.
+
+5. Factory Pattern:
+   - BayFactory: tạo bay với ContainerSize tự động (lẻ=20, chẵn=40).
+   - ContainerFactory: tạo Container từ container number (ISO 6346).
+
+6. Auto-migrate khi start:
+   - Dùng context.Database.EnsureCreated() (KHÔNG dùng EF Migrations).
+   - Mọi thay đổi schema cần xóa DB để apply lại.
+
+7. Audit fields tự động:
+   - CreatedAt: set khi AddAsync.
+   - UpdatedAt: set khi Update / Remove (soft delete).
+   - Tất cả do GenericRepository tự xử lý.
+
+================================================================================
+HẾT
+================================================================================

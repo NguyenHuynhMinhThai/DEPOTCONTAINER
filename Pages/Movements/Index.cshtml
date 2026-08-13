@@ -1,0 +1,61 @@
+@page
+@model DEPOTCONTAINER.Pages.Movements.IndexModel
+@{
+    ViewData["Title"] = "Lịch sử vận chuyển";
+}
+
+<div class="d-flex justify-content-between align-items-center mt-4 mb-3">
+    <h2><i class="bi bi-truck"></i> Lịch sử vận chuyển (In/Out)</h2>
+    <a asp-page="Create" class="btn btn-success"><i class="bi bi-plus-circle"></i> Tạo movement</a>
+</div>
+
+<div class="card shadow-sm">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>#</th>
+                    <th>Số Container</th>
+                    <th>Loại</th>
+                    <th>Phương tiện</th>
+                    <th>Tài xế</th>
+                    <th>Đến</th>
+                    <th>Thời gian</th>
+                    <th>Lệnh</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.PagedData.Items.Count == 0)
+                {
+                    <tr><td colspan="8" class="text-center py-4 text-muted">Chưa có movement nào.</td></tr>
+                }
+                @foreach (var m in Model.PagedData.Items)
+                {
+                    <tr>
+                        <td>@m.Id</td>
+                        <td><code>@m.ContainerNumber</code></td>
+                        <td>
+                            @if (m.MovementType == MovementType.In)
+                            {
+                                <span class="badge bg-success"><i class="bi bi-box-arrow-in-down"></i> VÀO</span>
+                            }
+                            else if (m.MovementType == MovementType.Out)
+                            {
+                                <span class="badge bg-danger"><i class="bi bi-box-arrow-up"></i> RA</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-info">NỘI BỘ</span>
+                            }
+                        </td>
+                        <td>@m.Vehicle</td>
+                        <td>@m.DriverName</td>
+                        <td>@(m.ToBlockCode ?? "-")</td>
+                        <td>@m.MovementDate.ToString("dd/MM/yyyy HH:mm")</td>
+                        <td>@(m.ReleaseOrderNumber ?? "-")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

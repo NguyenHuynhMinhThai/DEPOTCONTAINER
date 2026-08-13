@@ -1,0 +1,55 @@
+@page
+@model DEPOTCONTAINER.Pages.Containers.DetailsModel
+@{
+    ViewData["Title"] = "Chi tiết Container";
+}
+
+<h2 class="mt-4"><i class="bi bi-eye"></i> Chi tiết Container</h2>
+
+@if (Model.Container != null)
+{
+    <div class="card shadow-sm mt-3">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0"><code>@Model.Container.ContainerNumber</code></h5>
+        </div>
+        <div class="card-body">
+            <dl class="row">
+                <dt class="col-sm-3">Loại container:</dt>
+                <dd class="col-sm-9">@Model.Container.ContainerTypeName</dd>
+
+                <dt class="col-sm-3">Mã ISO:</dt>
+                <dd class="col-sm-9">@Model.Container.IsoCode</dd>
+
+                <dt class="col-sm-3">Kích thước:</dt>
+                <dd class="col-sm-9"><span class="badge bg-info">@Model.Container.SizeInFeet ft</span></dd>
+
+                <dt class="col-sm-3">Trọng lượng tối đa:</dt>
+                <dd class="col-sm-9">@Model.Container.MaxWeight.ToString("N2") kg</dd>
+
+                <dt class="col-sm-3">Trọng lượng vỏ:</dt>
+                <dd class="col-sm-9">@Model.Container.TareWeight.ToString("N2") kg</dd>
+
+                <dt class="col-sm-3">Hãng khai thác:</dt>
+                <dd class="col-sm-9">@Model.Container.LineOperatorName</dd>
+
+                <dt class="col-sm-3">Tình trạng:</dt>
+                <dd class="col-sm-9">@Model.Container.ConditionName</dd>
+
+                <dt class="col-sm-3">Phân loại:</dt>
+                <dd class="col-sm-9">@Model.Container.CategoryName</dd>
+
+                <dt class="col-sm-3">Vị trí hiện tại:</dt>
+                <dd class="col-sm-9">@Model.Container.Location</dd>
+            </dl>
+        </div>
+        <div class="card-footer text-end">
+            <a asp-page="Index" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Quay lại</a>
+            <a asp-page="Edit" asp-route-id="@Model.Container.Id" class="btn btn-warning"><i class="bi bi-pencil"></i> Sửa</a>
+        </div>
+    </div>
+}
+else
+{
+    <div class="alert alert-warning">Không tìm thấy container.</div>
+    <a asp-page="Index" class="btn btn-secondary">Quay lại</a>
+}

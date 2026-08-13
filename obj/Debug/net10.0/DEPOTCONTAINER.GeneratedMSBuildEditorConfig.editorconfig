@@ -1,0 +1,148 @@
+is_global = true
+build_property.TargetFramework = net10.0
+build_property.TargetFramework = net10.0
+build_property.TargetPlatformMinVersion = 
+build_property.TargetPlatformMinVersion = 
+build_property.UsingMicrosoftNETSdkWeb = true
+build_property.UsingMicrosoftNETSdkWeb = true
+build_property.ProjectTypeGuids = 
+build_property.ProjectTypeGuids = 
+build_property.InvariantGlobalization = 
+build_property.InvariantGlobalization = 
+build_property.PlatformNeutralAssembly = 
+build_property.PlatformNeutralAssembly = 
+build_property.EnforceExtendedAnalyzerRules = 
+build_property.EnforceExtendedAnalyzerRules = 
+build_property._SupportedPlatformList = Linux,macOS,Windows
+build_property._SupportedPlatformList = Linux,macOS,Windows
+build_property.TargetFrameworkIdentifier = .NETCoreApp
+build_property.TargetFrameworkVersion = v10.0
+build_property.EntryPointFilePath = 
+build_property.RootNamespace = DEPOTCONTAINER
+build_property.RootNamespace = DEPOTCONTAINER
+build_property.ProjectDir = /Users/macbook/Documents/DEPOTCONTAINER/
+build_property.EnableComHosting = 
+build_property.EnableGeneratedComInterfaceComImportInterop = 
+build_property.RazorLangVersion = 10.0
+build_property.SupportLocalizedComponentNames = 
+build_property.GenerateRazorMetadataSourceChecksumAttributes = 
+build_property.MSBuildProjectDirectory = /Users/macbook/Documents/DEPOTCONTAINER
+build_property._RazorSourceGeneratorDebug = 
+build_property.EffectiveAnalysisLevelStyle = 10.0
+build_property.EnableCodeStyleSeverity = 
+
+[/Users/macbook/Documents/DEPOTCONTAINER/Pages/Blocks/Create.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvQmxvY2tzL0NyZWF0ZS5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/macbook/Documents/DEPOTCONTAINER/Pages/Blocks/Delete.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvQmxvY2tzL0RlbGV0ZS5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/macbook/Documents/DEPOTCONTAINER/Pages/Blocks/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvQmxvY2tzL0luZGV4LmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/macbook/Documents/DEPOTCONTAINER/Pages/Blocks/Layout.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvQmxvY2tzL0xheW91dC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/macbook/Documents/DEPOTCONTAINER/Pages/Containers/Create.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvQ29udGFpbmVycy9DcmVhdGUuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/macbook/Documents/DEPOTCONTAINER/Pages/Containers/Delete.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvQ29udGFpbmVycy9EZWxldGUuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/macbook/Documents/DEPOTCONTAINER/Pages/Containers/Details.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvQ29udGFpbmVycy9EZXRhaWxzLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/macbook/Documents/DEPOTCONTAINER/Pages/Containers/Edit.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvQ29udGFpbmVycy9FZGl0LmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/macbook/Documents/DEPOTCONTAINER/Pages/Containers/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvQ29udGFpbmVycy9JbmRleC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/macbook/Documents/DEPOTCONTAINER/Pages/Customers/Create.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvQ3VzdG9tZXJzL0NyZWF0ZS5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/macbook/Documents/DEPOTCONTAINER/Pages/Customers/Delete.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvQ3VzdG9tZXJzL0RlbGV0ZS5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/macbook/Documents/DEPOTCONTAINER/Pages/Customers/Edit.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvQ3VzdG9tZXJzL0VkaXQuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/macbook/Documents/DEPOTCONTAINER/Pages/Customers/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvQ3VzdG9tZXJzL0luZGV4LmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/macbook/Documents/DEPOTCONTAINER/Pages/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvSW5kZXguY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/macbook/Documents/DEPOTCONTAINER/Pages/LineOperators/Create.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvTGluZU9wZXJhdG9ycy9DcmVhdGUuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/macbook/Documents/DEPOTCONTAINER/Pages/LineOperators/Delete.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvTGluZU9wZXJhdG9ycy9EZWxldGUuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/macbook/Documents/DEPOTCONTAINER/Pages/LineOperators/Edit.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvTGluZU9wZXJhdG9ycy9FZGl0LmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/macbook/Documents/DEPOTCONTAINER/Pages/LineOperators/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvTGluZU9wZXJhdG9ycy9JbmRleC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/macbook/Documents/DEPOTCONTAINER/Pages/Movements/Create.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvTW92ZW1lbnRzL0NyZWF0ZS5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/macbook/Documents/DEPOTCONTAINER/Pages/Movements/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvTW92ZW1lbnRzL0luZGV4LmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/macbook/Documents/DEPOTCONTAINER/Pages/ReleaseOrders/Create.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvUmVsZWFzZU9yZGVycy9DcmVhdGUuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/macbook/Documents/DEPOTCONTAINER/Pages/ReleaseOrders/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvUmVsZWFzZU9yZGVycy9JbmRleC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/macbook/Documents/DEPOTCONTAINER/Pages/_ViewImports.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvX1ZpZXdJbXBvcnRzLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/macbook/Documents/DEPOTCONTAINER/Pages/_ViewStart.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvX1ZpZXdTdGFydC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/macbook/Documents/DEPOTCONTAINER/Views/Shared/Error.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvU2hhcmVkL0Vycm9yLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/macbook/Documents/DEPOTCONTAINER/Views/Shared/_ValidationScriptsPartial.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvU2hhcmVkL19WYWxpZGF0aW9uU2NyaXB0c1BhcnRpYWwuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/macbook/Documents/DEPOTCONTAINER/Views/_ViewImports.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvX1ZpZXdJbXBvcnRzLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/macbook/Documents/DEPOTCONTAINER/Views/_ViewStart.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvX1ZpZXdTdGFydC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/macbook/Documents/DEPOTCONTAINER/Views/Shared/_Layout.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvU2hhcmVkL19MYXlvdXQuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = b-ao3nj19luk

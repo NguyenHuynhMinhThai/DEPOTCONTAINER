@@ -1,0 +1,83 @@
+@page
+@model DEPOTCONTAINER.Pages.ReleaseOrders.CreateModel
+@{
+    ViewData["Title"] = "Tạo lệnh giao container";
+}
+
+<h2 class="mt-4"><i class="bi bi-plus-circle"></i> Tạo lệnh giao container</h2>
+
+<div class="card shadow-sm mt-3">
+    <div class="card-body">
+        <form method="post">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label asp-for="Input.OrderNumber" class="form-label">Số lệnh <span class="text-danger">*</span></label>
+                    <input asp-for="Input.OrderNumber" class="form-control" placeholder="VD: RO-2026-001" />
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="Input.LineOperatorId" class="form-label">Hãng khai thác (Line Operator) <span class="text-danger">*</span></label>
+                    <select asp-for="Input.LineOperatorId" class="form-select" asp-items="Model.LineOperators">
+                        <option value="">-- Chọn --</option>
+                    </select>
+                </div>
+                <div class="col-md-5">
+                    <label asp-for="Input.CustomerId" class="form-label">Khách hàng <span class="text-danger">*</span></label>
+                    <select asp-for="Input.CustomerId" class="form-select" asp-items="Model.Customers">
+                        <option value="">-- Chọn --</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="Input.ValidUntil" class="form-label">Hạn lệnh <span class="text-danger">*</span></label>
+                    <input asp-for="Input.ValidUntil" type="date" class="form-control" />
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="Input.ExportVessel" class="form-label">Chuyến tàu xuất</label>
+                    <input asp-for="Input.ExportVessel" class="form-control" placeholder="VD: MAERSK HONG KONG V.123W" />
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="Input.ExportDate" class="form-label">Ngày tàu xuất</label>
+                    <input asp-for="Input.ExportDate" type="date" class="form-control" />
+                </div>
+                <div class="col-12">
+                    <label asp-for="Input.Description" class="form-label">Mô tả</label>
+                    <textarea asp-for="Input.Description" class="form-control" rows="2"></textarea>
+                </div>
+            </div>
+
+            <h5 class="mt-4">Chi tiết lệnh</h5>
+            <table class="table table-sm table-bordered">
+                <thead>
+                    <tr>
+                        <th>Kích thước</th>
+                        <th>Loại</th>
+                        <th>Số lượng</th>
+                        <th>Ghi chú</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (int i = 0; i < Model.Input.Details.Count; i++)
+                    {
+                        <tr>
+                            <td>
+                                <select name="Input.Details[@i].ContainerSize" class="form-select form-select-sm" asp-items="Model.Sizes"></select>
+                            </td>
+                            <td>
+                                <select name="Input.Details[@i].ContainerType" class="form-select form-select-sm" asp-items="Model.ContainerTypes"></select>
+                            </td>
+                            <td>
+                                <input name="Input.Details[@i].Quantity" type="number" min="1" class="form-control form-control-sm" value="@Model.Input.Details[i].Quantity" />
+                            </td>
+                            <td>
+                                <input name="Input.Details[@i].Note" class="form-control form-control-sm" value="@Model.Input.Details[i].Note" />
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+
+            <hr class="my-4" />
+            <a asp-page="Index" class="btn btn-outline-secondary">Hủy</a>
+            <button type="submit" class="btn btn-success"><i class="bi bi-save"></i> Tạo lệnh</button>
+        </form>
+    </div>
+</div>

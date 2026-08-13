@@ -1,0 +1,18 @@
+@page
+@model DEPOTCONTAINER.Pages.LineOperators.DeleteModel
+@{
+    ViewData["Title"] = "Xóa Line Operator";
+}
+
+<h2 class="mt-4 text-danger"><i class="bi bi-trash"></i> Xóa Hãng khai thác</h2>
+
+<div class="card border-danger shadow-sm mt-3">
+    <div class="card-body">
+        <p>Xóa hãng khai thác <strong>@Model.Name</strong> (Owner Code: <code>@Model.OwnerCode</code>)?</p>
+        <form method="post">
+            <input type="hidden" asp-for="Id" />
+            <a asp-page="Index" class="btn btn-outline-secondary">Hủy</a>
+            <button type="submit" class="btn btn-danger">Xóa</button>
+        </form>
+    </div>
+</div>

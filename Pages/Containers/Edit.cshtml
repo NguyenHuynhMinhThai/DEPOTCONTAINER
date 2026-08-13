@@ -1,0 +1,75 @@
+@page
+@model DEPOTCONTAINER.Pages.Containers.EditModel
+@{
+    ViewData["Title"] = "Sửa Container";
+}
+
+<h2 class="mt-4"><i class="bi bi-pencil"></i> Sửa Container</h2>
+
+@if (Model.Container == null)
+{
+    <div class="alert alert-warning">Không tìm thấy container.</div>
+}
+else
+{
+    <div class="card shadow-sm mt-3">
+        <div class="card-body">
+            <form method="post">
+                <input type="hidden" asp-for="Input.Id" />
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Số Container</label>
+                        <input class="form-control" value="@Model.Container.ContainerNumber" readonly />
+                    </div>
+                    <div class="col-md-3">
+                        <label asp-for="Input.IsoCode" class="form-label">Mã ISO</label>
+                        <input asp-for="Input.IsoCode" class="form-control" />
+                    </div>
+                    <div class="col-md-3">
+                        <label asp-for="Input.LineOperatorId" class="form-label">Hãng khai thác</label>
+                        <select asp-for="Input.LineOperatorId" class="form-select" asp-items="Model.LineOperators">
+                            <option value="">-- Chọn --</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="Input.ContainerType" class="form-label">Loại</label>
+                        <select asp-for="Input.ContainerType" class="form-select" asp-items="Model.ContainerTypes"></select>
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="Input.Size" class="form-label">Kích thước</label>
+                        <select asp-for="Input.Size" class="form-select" asp-items="Model.Sizes"></select>
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="Input.Category" class="form-label">Phân loại</label>
+                        <select asp-for="Input.Category" class="form-select" asp-items="Model.Categories"></select>
+                    </div>
+                    <div class="col-md-3">
+                        <label asp-for="Input.MaxWeight" class="form-label">Trọng lượng tối đa (kg)</label>
+                        <input asp-for="Input.MaxWeight" type="number" step="0.01" class="form-control" />
+                    </div>
+                    <div class="col-md-3">
+                        <label asp-for="Input.TareWeight" class="form-label">Trọng lượng vỏ (kg)</label>
+                        <input asp-for="Input.TareWeight" type="number" step="0.01" class="form-control" />
+                    </div>
+                    <div class="col-md-3">
+                        <label asp-for="Input.ManufactureDate" class="form-label">Ngày SX</label>
+                        <input asp-for="Input.ManufactureDate" type="date" class="form-control" />
+                    </div>
+                    <div class="col-md-3">
+                        <label asp-for="Input.Condition" class="form-label">Tình trạng</label>
+                        <select asp-for="Input.Condition" class="form-select" asp-items="Model.Conditions"></select>
+                    </div>
+                    <div class="col-12">
+                        <label asp-for="Input.DamageDescription" class="form-label">Mô tả hư hỏng</label>
+                        <textarea asp-for="Input.DamageDescription" class="form-control" rows="2"></textarea>
+                    </div>
+                </div>
+                <hr class="my-4" />
+                <div class="d-flex justify-content-between">
+                    <a asp-page="Index" class="btn btn-outline-secondary">Quay lại</a>
+                    <button type="submit" class="btn btn-warning"><i class="bi bi-save"></i> Cập nhật</button>
+                </div>
+            </form>
+        </div>
+    </div>
+}

@@ -1,0 +1,48 @@
+@page
+@model DEPOTCONTAINER.Pages.LineOperators.EditModel
+@{
+    ViewData["Title"] = "Sửa Line Operator";
+}
+
+<h2 class="mt-4"><i class="bi bi-pencil"></i> Sửa Hãng khai thác</h2>
+
+<div class="card shadow-sm mt-3">
+    <div class="card-body">
+        <form method="post">
+            <input type="hidden" asp-for="Input.Id" />
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label asp-for="Input.OwnerCode" class="form-label">Owner Code</label>
+                    <input asp-for="Input.OwnerCode" class="form-control" maxlength="4" style="text-transform: uppercase;" />
+                </div>
+                <div class="col-md-9">
+                    <label asp-for="Input.Name" class="form-label">Tên hãng</label>
+                    <input asp-for="Input.Name" class="form-control" />
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="Input.TaxCode" class="form-label">MST</label>
+                    <input asp-for="Input.TaxCode" class="form-control" />
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="Input.Phone" class="form-label">SĐT</label>
+                    <input asp-for="Input.Phone" class="form-control" />
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="Input.Email" class="form-label">Email</label>
+                    <input asp-for="Input.Email" type="email" class="form-control" />
+                </div>
+                <div class="col-12">
+                    <label asp-for="Input.Address" class="form-label">Địa chỉ</label>
+                    <input asp-for="Input.Address" class="form-control" />
+                </div>
+                <div class="col-12">
+                    <label asp-for="Input.Note" class="form-label">Ghi chú</label>
+                    <textarea asp-for="Input.Note" class="form-control" rows="2"></textarea>
+                </div>
+            </div>
+            <hr class="my-4" />
+            <a asp-page="Index" class="btn btn-outline-secondary">Hủy</a>
+            <button type="submit" class="btn btn-warning"><i class="bi bi-save"></i> Cập nhật</button>
+        </form>
+    </div>
+</div>

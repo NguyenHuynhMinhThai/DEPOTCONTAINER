@@ -1,0 +1,72 @@
+@page
+@model DEPOTCONTAINER.Pages.Blocks.LayoutModel
+@{
+    ViewData["Title"] = $"Layout Block {Model.Block?.BlockCode}";
+}
+
+@if (Model.Layout == null || Model.Block == null)
+{
+    <div class="alert alert-warning mt-3">Không tìm thấy layout.</div>
+}
+else
+{
+    <h2 class="mt-4"><i class="bi bi-grid"></i> Layout Block @Model.Block.BlockCode</h2>
+    <p class="text-muted">@Model.Block.Bays.Count bay, tổng cộng @Model.TotalContainers container.</p>
+
+    <div class="accordion" id="baysAccordion">
+        @foreach (var bay in Model.Layout.Bays)
+        {
+            var bayId = $"bay-{bay.BayId}";
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#@bayId">
+                        <strong>Bay @bay.BayNumber</strong>
+                        <span class="badge bg-info ms-2">@((int)bay.ContainerSize) ft</span>
+                        <span class="badge bg-secondary ms-2">@bay.Rows.Count row</span>
+                    </button>
+                </h2>
+                <div id="@bayId" class="accordion-collapse collapse" data-bs-parent="#baysAccordion">
+                    <div class="accordion-body">
+                        <table class="table table-sm table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Row</th>
+                                    @for (int t = 1; t <= Model.TierCount; t++)
+                                    {
+                                        <th class="text-center">Tier @t</th>
+                                    }
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var row in bay.Rows)
+                                {
+                                    <tr>
+                                        <td><strong>Row @row.RowNumber</strong></td>
+                                        @for (int t = 1; t <= Model.TierCount; t++)
+                                        {
+                                            var tier = row.Tiers.FirstOrDefault(x => x.TierNumber == t);
+                                            if (tier != null && tier.IsOccupied)
+                                            {
+                                                <td class="text-center bg-warning">
+                                                    <small><i class="bi bi-box-fill"></i> @tier.ContainerNumber</small>
+                                                </td>
+                                            }
+                                            else
+                                            {
+                                                <td class="text-center bg-light text-muted">—</td>
+                                            }
+                                        }
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <div class="mt-3">
+        <a asp-page="Index" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Quay lại</a>
+    </div>
+}

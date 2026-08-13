@@ -1,0 +1,18 @@
+@page
+@model DEPOTCONTAINER.Pages.Customers.DeleteModel
+@{
+    ViewData["Title"] = "Xóa khách hàng";
+}
+
+<h2 class="mt-4 text-danger"><i class="bi bi-trash"></i> Xóa Khách hàng</h2>
+
+<div class="card border-danger shadow-sm mt-3">
+    <div class="card-body">
+        <p>Xóa khách hàng <strong>@Model.Name</strong> (MST: <code>@Model.TaxCode</code>)?</p>
+        <form method="post">
+            <input type="hidden" asp-for="Id" />
+            <a asp-page="Index" class="btn btn-outline-secondary">Hủy</a>
+            <button type="submit" class="btn btn-danger">Xóa</button>
+        </form>
+    </div>
+</div>

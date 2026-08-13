@@ -1,0 +1,79 @@
+@page
+@model DEPOTCONTAINER.Pages.ReleaseOrders.IndexModel
+@{
+    ViewData["Title"] = "Lệnh giao container";
+}
+
+<div class="d-flex justify-content-between align-items-center mt-4 mb-3">
+    <h2><i class="bi bi-file-earmark-text"></i> Lệnh giao container</h2>
+    <a asp-page="Create" class="btn btn-success"><i class="bi bi-plus-circle"></i> Tạo lệnh</a>
+</div>
+
+<div class="alert alert-info">
+    <i class="bi bi-info-circle"></i>
+    Theo đề bài: <strong>Depot không được tự ý giao container ra ngoài</strong> - phải có lệnh từ hãng khai thác (Line Operator).
+</div>
+
+<div class="card shadow-sm">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Số lệnh</th>
+                    <th>Hãng KT</th>
+                    <th>Khách hàng</th>
+                    <th>Hạn lệnh</th>
+                    <th>Tàu xuất</th>
+                    <th>Trạng thái</th>
+                    <th>Tiến độ</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.PagedData.Items.Count == 0)
+                {
+                    <tr><td colspan="7" class="text-center py-4 text-muted">Chưa có lệnh nào.</td></tr>
+                }
+                @foreach (var r in Model.PagedData.Items)
+                {
+                    <tr>
+                        <td><code>@r.OrderNumber</code></td>
+                        <td>@r.LineOperatorName</td>
+                        <td>@r.CustomerName (@r.CustomerTaxCode)</td>
+                        <td>@r.ValidUntil.ToString("dd/MM/yyyy")</td>
+                        <td>@r.ExportVessel</td>
+                        <td>
+                            @switch (r.Status)
+                            {
+                                case ReleaseOrderStatus.New:
+                                    <span class="badge bg-secondary">Mới</span>
+                                    break;
+                                case ReleaseOrderStatus.InProgress:
+                                    <span class="badge bg-info">Đang thực hiện</span>
+                                    break;
+                                case ReleaseOrderStatus.Completed:
+                                    <span class="badge bg-success">Hoàn thành</span>
+                                    break;
+                                case ReleaseOrderStatus.Cancelled:
+                                    <span class="badge bg-dark">Đã hủy</span>
+                                    break;
+                                case ReleaseOrderStatus.Expired:
+                                    <span class="badge bg-warning text-dark">Hết hạn</span>
+                                    break;
+                            }
+                        </td>
+                        <td>
+                            @{
+                                var totalQty = r.Details.Sum(d => d.Quantity);
+                                var doneQty = r.Details.Sum(d => d.DeliveredQuantity);
+                                var pct = totalQty > 0 ? (doneQty * 100 / totalQty) : 0;
+                            }
+                            <div class="progress" style="height: 20px;">
+                                <div class="progress-bar" role="progressbar" style="width: @(pct)%">@doneQty/@totalQty</div>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

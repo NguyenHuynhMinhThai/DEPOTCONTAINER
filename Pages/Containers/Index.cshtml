@@ -1,0 +1,128 @@
+@page
+@model DEPOTCONTAINER.Pages.Containers.IndexModel
+@{
+    ViewData["Title"] = "Danh sách Container";
+}
+
+<div class="d-flex justify-content-between align-items-center mt-4 mb-3">
+    <h2><i class="bi bi-box"></i> Quản lý Container</h2>
+    <a asp-page="Create" class="btn btn-success">
+        <i class="bi bi-plus-circle"></i> Tạo container mới
+    </a>
+</div>
+
+<form method="get" class="mb-3">
+    <div class="row g-2">
+        <div class="col-md-4">
+            <input type="text" name="SearchTerm" value="@Model.Parameters.SearchTerm" class="form-control" placeholder="Tìm theo số container, ISO code..." />
+        </div>
+        <div class="col-md-2">
+            <select name="SortBy" class="form-select">
+                <option value="">-- Sắp xếp --</option>
+                <option value="number" selected="@(Model.Parameters.SortBy == "number")">Số container</option>
+                <option value="type" selected="@(Model.Parameters.SortBy == "type")">Loại</option>
+                <option value="size" selected="@(Model.Parameters.SortBy == "size")">Kích thước</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <select name="PageSize" class="form-select">
+                @foreach (var size in new[] { 10, 20, 50, 100 })
+                {
+                    <option value="@size" selected="@(Model.Parameters.PageSize == size)">@size/trang</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-2">
+            <button type="submit" class="btn btn-primary w-100">
+                <i class="bi bi-search"></i> Tìm
+            </button>
+        </div>
+    </div>
+</form>
+
+<div class="card shadow-sm">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Số Container</th>
+                    <th>Loại</th>
+                    <th>Kích thước</th>
+                    <th>ISO</th>
+                    <th>Hãng KT</th>
+                    <th>Vị trí</th>
+                    <th>Tình trạng</th>
+                    <th>Phân loại</th>
+                    <th class="text-end">Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.PagedData.Items.Count == 0)
+                {
+                    <tr><td colspan="9" class="text-center py-4 text-muted">Chưa có container nào.</td></tr>
+                }
+                @foreach (var c in Model.PagedData.Items)
+                {
+                    <tr>
+                        <td><code>@c.ContainerNumber</code></td>
+                        <td>@c.ContainerTypeName</td>
+                        <td><span class="badge bg-info">@c.SizeInFeet ft</span></td>
+                        <td>@c.IsoCode</td>
+                        <td>@c.LineOperatorName</td>
+                        <td>
+                            @if (c.IsInYard)
+                            {
+                                <span class="badge bg-success">@c.Location</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary">Ngoài bãi</span>
+                            }
+                        </td>
+                        <td>
+                            @if (c.Condition == ContainerCondition.Normal)
+                            {
+                                <span class="badge bg-success">Bình thường</span>
+                            }
+                            else if (c.Condition == ContainerCondition.SlightlyDamaged)
+                            {
+                                <span class="badge bg-warning text-dark">Hư nhẹ</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-danger">Hư nặng</span>
+                            }
+                        </td>
+                        <td>@c.CategoryName</td>
+                        <td class="text-end">
+                            <a asp-page="Details" asp-route-id="@c.Id" class="btn btn-sm btn-outline-info">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            <a asp-page="Edit" asp-route-id="@c.Id" class="btn btn-sm btn-outline-warning">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <a asp-page="Delete" asp-route-id="@c.Id" class="btn btn-sm btn-outline-danger">
+                                <i class="bi bi-trash"></i>
+                            </a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@if (Model.PagedData.TotalPages > 1)
+{
+    <nav class="mt-3">
+        <ul class="pagination justify-content-center">
+            <li class="page-item @(Model.PagedData.HasPrevious ? "" : "disabled")">
+                <a class="page-link" href="?PageNumber=@(Model.PagedData.PageNumber - 1)&PageSize=@Model.Parameters.PageSize&SortBy=@Model.Parameters.SortBy&SearchTerm=@Model.Parameters.SearchTerm">Trước</a>
+            </li>
+            <li class="page-item disabled"><span class="page-link">Trang @Model.PagedData.PageNumber / @Model.PagedData.TotalPages</span></li>
+            <li class="page-item @(Model.PagedData.HasNext ? "" : "disabled")">
+                <a class="page-link" href="?PageNumber=@(Model.PagedData.PageNumber + 1)&PageSize=@Model.Parameters.PageSize&SortBy=@Model.Parameters.SortBy&SearchTerm=@Model.Parameters.SearchTerm">Sau</a>
+            </li>
+        </ul>
+    </nav>
+}

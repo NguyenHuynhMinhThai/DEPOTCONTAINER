@@ -1,0 +1,19 @@
+@page
+@model DEPOTCONTAINER.Pages.Blocks.DeleteModel
+@{
+    ViewData["Title"] = "Xóa Block";
+}
+
+<h2 class="mt-4 text-danger"><i class="bi bi-trash"></i> Xóa Block</h2>
+
+<div class="card border-danger shadow-sm mt-3">
+    <div class="card-body">
+        <p>Bạn có chắc muốn xóa Block <strong>@Model.Code</strong> - @Model.Name?</p>
+        <p class="text-danger"><i class="bi bi-exclamation-triangle"></i> Hành động này sẽ xóa tất cả Bay/Row/Tier bên trong.</p>
+        <form method="post">
+            <input type="hidden" asp-for="Id" />
+            <a asp-page="Index" class="btn btn-outline-secondary">Hủy</a>
+            <button type="submit" class="btn btn-danger">Xóa</button>
+        </form>
+    </div>
+</div>
